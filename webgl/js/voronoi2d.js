@@ -77,7 +77,7 @@ class PointVoronoi {
         this.pointSegments = 32;
 
         var geometry = new THREE.CircleGeometry( this.pointRadius, this.pointSegments );
-        var material = new THREE.MeshBasicMaterial( { color: 0xffff00 } );
+        var material = new THREE.MeshBasicMaterial( { color: 0x000000 } );
         this.circle = new THREE.Mesh( geometry, material );
         this.circle.position.x = point.x;
         this.circle.position.y = point.y;
