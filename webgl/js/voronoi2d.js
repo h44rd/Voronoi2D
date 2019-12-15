@@ -1,65 +1,115 @@
-var scene = new THREE.Scene();
-// var camera = new THREE.OrthographicCamera();
+class Vornoi2D {
+    
+    constructor() {
+        this.scene = new THREE.Scene();
 
-var frustumSize = 1;
-var aspect = window.innerWidth / window.innerHeight;
-var camera = new THREE.OrthographicCamera( frustumSize * aspect / - 2, frustumSize * aspect / 2, frustumSize / 2, frustumSize / - 2);
+        this.frustumSize = 1;
+        this.aspect = window.innerWidth / window.innerHeight;
+        
+        this.camera = new THREE.OrthographicCamera(this.frustumSize * this.aspect / -2, this.frustumSize * this.aspect / 2, this.frustumSize / 2, this.frustumSize / -2);
+        this.camera.position.z = 1000;
+        this.camera.lookAt(this.scene.position);
 
-var renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
+        this.renderer = new THREE.WebGLRenderer();
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(this.renderer.domElement);
 
-var geometry = new THREE.ConeGeometry(1, 1, 64);
-var material = new THREE.MeshBasicMaterial({
-    color: 0x00ff00
-});
-var cone = new THREE.Mesh(geometry, material);
-cone.position.x = 50;
-cone.position.y = 50;
-scene.add(cone);
-camera.position.z = 10;
-console.log(camera.position);
-console.log(cone.position);
-cone.rotation.x = Math.PI/2;
-var rotation = 0;
+    }
+
+    getCoordsFromEvent(event) {
+        var x = -1 * (window.innerWidth/2 - event.clientX) * this.frustumSize * this.aspect / window.innerWidth;
+        var y = (window.innerHeight/2 - event.clientY) * this.frustumSize / window.innerHeight;
+        return [x, y];
+    }
+
+    addPointClickCallback(event) {
+        var coords = this.getCoordsFromEvent(event);
+        var x = coords[0];
+        var y = coords[1];
+        this.addPoint(x, y, this.getRandomColor());
+    }
+
+    render() {
+        this.renderer.render(this.scene, this.camera);
+    }
+
+    getRandomColor() {
+        var letters = '0123456789ABCDEF';
+        var color = '#';
+        for (var i = 0; i < 6; i++) {
+          color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
+    }
+
+    addPoint(x, y, color) {
+        this.pointRadius = 0.003;
+        this.pointSegments = 32;
+
+        var geometry = new THREE.CircleGeometry( this.pointRadius, this.pointSegments );
+        var material = new THREE.MeshBasicMaterial( { color: 0xffff00 } );
+        this.circle = new THREE.Mesh( geometry, material );
+        this.circle.position.x = x;
+        this.circle.position.y = y;
+        this.circle.position.z = 5;
+
+        this.coneRadius = 3;
+        this.coneHeight = 1;
+        this.coneSegments = 64;
+        geometry = new THREE.ConeGeometry(this.coneRadius, this.coneHeight, this.coneSegments);
+        material = new THREE.MeshBasicMaterial({
+            color: color
+        });
+        this.cone = new THREE.Mesh(geometry, material);
+        this.cone.position.x = x;
+        this.cone.position.y = y;
+        this.cone.rotation.x = Math.PI/2;
+
+        this.scene.add(this.cone);
+        this.scene.add(this.circle);
+    }
+
+}
+
+class PointVoronoi {
+    constructor(x, y, color) {
+        this.pointRadius = 0.003;
+        this.pointSegments = 32;
+
+        var geometry = new THREE.CircleGeometry( this.pointRadius, this.pointSegments );
+        var material = new THREE.MeshBasicMaterial( { color: 0xffff00 } );
+        this.circle = new THREE.Mesh( geometry, material );
+        this.circle.position.x = point.x;
+        this.circle.position.y = point.y;
+        this.circle.position.z = 5;
+
+        this.coneRadius = 3;
+        this.coneHeight = 1;
+        this.coneSegments = 64;
+        geometry = new THREE.ConeGeometry(this.coneRadius, this.coneHeight, this.coneSegments);
+        material = new THREE.MeshBasicMaterial({
+            color: color
+        });
+        this.cone = new THREE.Mesh(geometry, material);
+        this.cone.position.x = x;
+        this.cone.position.y = y;
+        this.cone.rotation.x = Math.PI/2;
+    }
+}
+
+V = new Vornoi2D();
+
 var animate = function () {
     requestAnimationFrame(animate);
-    // cone.rotation.x += 0.01;
-    // cone.rotation.y += 0.01;
-    // rotation += 0.05;
-    // camera.position.x = 0;
-    // camera.position.y = Math.sin(rotation) * 500;
-    // camera.position.z = Math.cos(rotation) * 500;
-    camera.lookAt( scene.position ); // the origin
-
-    renderer.render(scene, camera);
+    V.render();
 };
 
 document.addEventListener("click", mouseClick);
 animate();
 
 function mouseClick(event) {
-    var geometry = new THREE.ConeGeometry(1, 1, 64);
-    var material = new THREE.MeshBasicMaterial({
-        color: getRandomColor()
-    });
-    var cone = new THREE.Mesh(geometry, material);
-    // cone.position.x = (event.clientX/window.innerWidth)*frustumSize*aspect - frustumSize*aspect/2;
-    // cone.position.y = (event.clientY/window.innerHeight)*frustumSize + frustumSize/2;
-    cone.position.x = -1 * (window.innerWidth/2 - event.clientX)*frustumSize*aspect/window.innerWidth;
-    cone.position.y = (window.innerHeight/2 - event.clientY)*frustumSize/window.innerHeight;
-    cone.rotation.x = Math.PI/2;
-    console.log(window.innerWidth, window.innerHeight)
-    console.log(event);
-    console.log(cone.position);
-    scene.add(cone);
+    V.addPointClickCallback(event);
 }
 
-function getRandomColor() {
-    var letters = '0123456789ABCDEF';
-    var color = '#';
-    for (var i = 0; i < 6; i++) {
-      color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
-}
+
+
