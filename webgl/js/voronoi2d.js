@@ -17,6 +17,9 @@ class Vornoi2D {
         this.cones = [];
         this.circles = [];
 
+        this.pointsIndices = []; // Points members in this.cones and this.circles
+        this.lineIndices = [];  // Line members in this.cones and this.circles
+
         document.body.appendChild(this.renderer.domElement);
 
     }
@@ -84,6 +87,7 @@ class Vornoi2D {
         this.cones[this.voroSegments].push(cone);
         this.circles[this.voroSegments].push(circle);
 
+        this.pointsIndices.push(this.voroSegments);
         this.voroSegments += 1;
 
         console.log(this.cones);
@@ -115,6 +119,7 @@ class Vornoi2D {
             this.scene.add(circle);
         }
 
+        this.lineIndices.push(this.voroSegments);
         this.voroSegments += 1;
     }
 
@@ -159,8 +164,19 @@ class PointVoronoi {
 
 V = new Vornoi2D();
 
-a = new THREE.Vector2(0, 0)
-b = new THREE.Vector2(1, 1);
+a = new THREE.Vector2(-0.25, 0.5)
+b = new THREE.Vector2(0.5, 0.5);
+
+V.addLine(a, b, 5);
+
+a = new THREE.Vector2(0, 0.4)
+b = new THREE.Vector2(0, -0.4);
+
+V.addLine(a, b, 5);
+
+
+a = new THREE.Vector2(-0.5, -0.5)
+b = new THREE.Vector2(0.25, -0.5);
 
 V.addLine(a, b, 5);
 
