@@ -10,8 +10,12 @@ class Vornoi2D {
         this.camera.position.z = 1000;
         this.camera.lookAt(this.scene.position);
 
+        this.factor = 0.8;
+        this.screenWidth = window.innerWidth * this.factor;
+        this.screenHeight = window.innerHeight * this.factor;
+
         this.renderer = new THREE.WebGLRenderer();
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setSize(this.screenWidth, this.screenHeight);
 
         this.voroSegments = 0;
         this.cones = [];
@@ -25,8 +29,8 @@ class Vornoi2D {
     }
 
     getCoordsFromEvent(event) {
-        var x = -1 * (window.innerWidth/2 - event.clientX) * this.frustumSize * this.aspect / window.innerWidth;
-        var y = (window.innerHeight/2 - event.clientY) * this.frustumSize / window.innerHeight;
+        var x = -1 * (this.screenWidth/2 - event.clientX) * this.frustumSize * this.aspect / this.screenWidth;
+        var y = (this.screenHeight/2 - event.clientY) * this.frustumSize / this.screenHeight;
         return [x, y];
     }
 
@@ -64,7 +68,7 @@ class Vornoi2D {
 
         this.coneRadius = 3;
         this.coneHeight = 1;
-        this.coneSegments = 64;
+        this.coneSegments = 128;
         geometry = new THREE.ConeGeometry(this.coneRadius, this.coneHeight, this.coneSegments);
         material = new THREE.MeshBasicMaterial({
             color: color
