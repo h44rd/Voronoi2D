@@ -10,7 +10,7 @@ class Vornoi2D {
         this.camera.position.z = 1000;
         this.camera.lookAt(this.scene.position);
 
-        this.factor = 0.8;
+        this.factor = 1.0;
         this.screenWidth = window.innerWidth * this.factor;
         this.screenHeight = window.innerHeight * this.factor;
 
