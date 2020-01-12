@@ -10,7 +10,10 @@ class Vornoi2D {
         this.camera.position.z = 1000;
         this.camera.lookAt(this.scene.position);
 
-        this.factor = 0.8;
+        this.pointRadius = 0.003;
+        this.pointSegments = 8;
+
+        this.factor = 1.0;
         this.screenWidth = window.innerWidth * this.factor;
         this.screenHeight = window.innerHeight * this.factor;
 
@@ -24,6 +27,15 @@ class Vornoi2D {
         this.pointsIndices = []; // Points members in this.cones and this.circles
         this.lineIndices = [];  // Line members in this.cones and this.circles
 
+        this.lineFirstPoint = null;
+        this.lineSecondPoint = null;
+        this.lineProgressFlag = false;
+        this.lineLevels = 5;
+        var geometry = new THREE.CircleGeometry(this.pointRadius, this.pointSegments);
+        var material = new THREE.MeshBasicMaterial({ color: 0x000000 });
+        this.circleInProgress = new THREE.Mesh(geometry, material);
+
+
         document.body.appendChild(this.renderer.domElement);
 
     }
@@ -34,15 +46,44 @@ class Vornoi2D {
         return [x, y];
     }
 
+    mouseMoveCallback(event) {
+        var coords = this.getCoordsFromEvent(event);
+        this.lineSecondPoint = new THREE.Vector2(coords[0], coords[1]);
+    }
+
     addPointClickCallback(event) {
         var coords = this.getCoordsFromEvent(event);
         var x = coords[0];
         var y = coords[1];
         var point = new THREE.Vector2(x, y);
-        this.addPoint(point, this.getRandomColor());
+
+        if(this.lineProgressFlag == false) {
+            this.lineFirstPoint = point;
+            this.lineProgressFlag = true;
+
+            this.circleInProgress.position.x = x;
+            this.circleInProgress.position.y = y;
+            this.circleInProgress.position.z = 5;
+
+            this.addLine(this.lineFirstPoint, this.lineFirstPoint + 0.25, this.lineLevels);
+
+            // this.scene.add(this.circleInProgress)
+        }
+        else {
+            this.lineSecondPoint = point;
+            // this.scene.remove(this.circleInProgress);
+
+            this.lineProgressFlag = false;
+            this.lineFirstPoint = null;
+            this.lineSecondPoint = null;
+        }
+        // this.addPoint(point, this.getRandomColor());
     }
 
     render() {
+        if(this.lineProgressFlag == true) {
+            this.modifyLine(this.voroSegments - 1, this.lineFirstPoint, this.lineSecondPoint, this.lineLevels);
+        }
         this.renderer.render(this.scene, this.camera);
     }
 
@@ -56,9 +97,6 @@ class Vornoi2D {
     }
 
     makeSeed(point, color) {
-        this.pointRadius = 0.003;
-        this.pointSegments = 8;
-
         var geometry = new THREE.CircleGeometry( this.pointRadius, this.pointSegments );
         var material = new THREE.MeshBasicMaterial( { color: 0x000000 } );
         this.circle = new THREE.Mesh( geometry, material );
@@ -68,7 +106,7 @@ class Vornoi2D {
 
         this.coneRadius = 3;
         this.coneHeight = 1;
-        this.coneSegments = 128;
+        this.coneSegments = 64;
         geometry = new THREE.ConeGeometry(this.coneRadius, this.coneHeight, this.coneSegments);
         material = new THREE.MeshBasicMaterial({
             color: color
@@ -98,6 +136,18 @@ class Vornoi2D {
 
         this.scene.add(cone);
         this.scene.add(circle);
+    }
+
+    modifyLine(lineIndex, point1, point2, levels) {
+        var line = this.makeLine(point1, point2, levels, [point1, point2]);
+
+        for(var i = 0; i < this.cones[lineIndex].length; i++) {
+            this.cones[lineIndex][i].position.x = line[i].x;
+            this.circles[lineIndex][i].position.x = line[i].x;
+
+            this.cones[lineIndex][i].position.y = line[i].y;
+            this.circles[lineIndex][i].position.y = line[i].y;
+        }
     }
 
     addLine(point1, point2, levels) {
@@ -168,21 +218,21 @@ class PointVoronoi {
 
 V = new Vornoi2D();
 
-a = new THREE.Vector2(-0.25, 0.5)
-b = new THREE.Vector2(0.5, 0.5);
+// a = new THREE.Vector2(-0.25, 0.5)
+// b = new THREE.Vector2(0.5, 0.5);
 
-V.addLine(a, b, 5);
+// V.addLine(a, b, 5);
 
-a = new THREE.Vector2(0, 0.4)
-b = new THREE.Vector2(0, -0.4);
+// a = new THREE.Vector2(0, 0.4)
+// b = new THREE.Vector2(0, -0.4);
 
-V.addLine(a, b, 5);
+// V.addLine(a, b, 5);
 
 
-a = new THREE.Vector2(-0.5, -0.5)
-b = new THREE.Vector2(0.25, -0.5);
+// a = new THREE.Vector2(-0.5, -0.5)
+// b = new THREE.Vector2(0.25, -0.5);
 
-V.addLine(a, b, 5);
+// V.addLine(a, b, 5);
 
 var animate = function () {
     requestAnimationFrame(animate);
@@ -190,11 +240,16 @@ var animate = function () {
 };
 
 document.addEventListener("click", mouseClick);
+document.addEventListener("mousemove", mouseMove);
+
 animate();
 
 function mouseClick(event) {
     V.addPointClickCallback(event);
 }
 
+function mouseMove(event) {
+    V.mouseMoveCallback(event);
+}
 
 
