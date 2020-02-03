@@ -10,6 +10,10 @@ class Vornoi2D {
         this.camera.position.z = 1000;
         this.camera.lookAt(this.scene.position);
 
+        this.coneRadius = 0.3;
+        this.coneHeight = 1;
+        this.coneSegments = 64;
+
         this.pointRadius = 0.003;
         this.pointSegments = 8;
 
@@ -35,6 +39,10 @@ class Vornoi2D {
         var material = new THREE.MeshBasicMaterial({ color: 0x000000 });
         this.circleInProgress = new THREE.Mesh(geometry, material);
 
+        geometry = new THREE.PlaneGeometry(10, 10);
+        material = new THREE.MeshBasicMaterial({ color: this.getRandomColor() });
+        this.plane = new THREE.Mesh(geometry, material);
+        this.scene.add(this.plane);
 
         document.body.appendChild(this.renderer.domElement);
 
@@ -104,9 +112,7 @@ class Vornoi2D {
         this.circle.position.y = point.y;
         this.circle.position.z = 5;
 
-        this.coneRadius = 3;
-        this.coneHeight = 1;
-        this.coneSegments = 64;
+        
         geometry = new THREE.ConeGeometry(this.coneRadius, this.coneHeight, this.coneSegments);
         material = new THREE.MeshBasicMaterial({
             color: color
