@@ -10,6 +10,9 @@ class Vornoi2D {
         this.camera.position.z = 1000;
         this.camera.lookAt(this.scene.position);
 
+        this.colorHue = 2;
+        this.colorPrime = 53;
+
         this.coneRadius = 0.3;
         this.coneHeight = 1;
         this.coneSegments = 64;
@@ -36,11 +39,11 @@ class Vornoi2D {
         this.lineProgressFlag = false;
         this.lineLevels = 5;
         var geometry = new THREE.CircleGeometry(this.pointRadius, this.pointSegments);
-        var material = new THREE.MeshBasicMaterial({ color: 0x000000 });
+        var material = new THREE.MeshBasicMaterial({ color: new THREE.Color(this.getHSLColor(70)) });
         this.circleInProgress = new THREE.Mesh(geometry, material);
 
         geometry = new THREE.PlaneGeometry(10, 10);
-        material = new THREE.MeshBasicMaterial({ color: this.getRandomColor() });
+        material = new THREE.MeshBasicMaterial({ color: new THREE.Color(this.getHSLColor(70)) });
         this.plane = new THREE.Mesh(geometry, material);
         this.scene.add(this.plane);
 
@@ -95,6 +98,10 @@ class Vornoi2D {
         this.renderer.render(this.scene, this.camera);
     }
 
+    getHSLColor(S) {
+        this.colorHue = (this.colorHue + this.colorPrime) % 360;
+        return "hsl(" + this.colorHue.toString(10) + ", " + S.toString(10) + "%, 70%)"; 
+    }
     getRandomColor() {
         var letters = '0123456789ABCDEF';
         var color = '#';
@@ -163,7 +170,8 @@ class Vornoi2D {
         this.cones[this.voroSegments] = [];
         this.circles[this.voroSegments] = [];
 
-        var color = this.getRandomColor();
+        // var color = this.getRandomColor();
+        var color = new THREE.Color(this.getHSLColor(70));
 
         var seed, circle, cone;
         
