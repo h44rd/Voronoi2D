@@ -34,6 +34,9 @@ class Vornoi2D {
         this.pointsIndices = []; // Points members in this.cones and this.circles
         this.lineIndices = [];  // Line members in this.cones and this.circles
 
+        this.curveProgressFlag = false;
+        this.currentCurveColor = new THREE.Color(this.getHSLColor(70));
+
         this.lineFirstPoint = null;
         this.lineSecondPoint = null;
         this.lineProgressFlag = false;
@@ -62,21 +65,46 @@ class Vornoi2D {
         this.lineSecondPoint = new THREE.Vector2(coords[0], coords[1]);
     }
 
+    keyboardEventCallback(event) {
+        if(event.keyCode == 32 || event.key == ' '){
+            this.spacebarCallBack();
+        }
+    }
+
+    spacebarCallBack() {
+        if(this.curveProgressFlag == true) {
+            this.deleteLine(this.voroSegments - 1);
+            this.curveProgressFlag = false;
+            this.lineProgressFlag = false;
+            this.currentCurveColor = new THREE.Color(this.getHSLColor(70));
+        }
+    }
+
+    deleteLine(lineIndex) {
+        for(var i = 0; i < this.cones[lineIndex].length; i++) {
+            this.scene.remove(this.cones[lineIndex][i]);
+            this.scene.remove(this.circles[lineIndex][i]);
+        }
+    }
+
     addPointClickCallback(event) {
         var coords = this.getCoordsFromEvent(event);
         var x = coords[0];
         var y = coords[1];
         var point = new THREE.Vector2(x, y);
 
+
+        this.circleInProgress.position.x = x;
+        this.circleInProgress.position.y = y;
+        this.circleInProgress.position.z = 5;
+
         if(this.lineProgressFlag == false) {
             this.lineFirstPoint = point;
             this.lineProgressFlag = true;
+            this.curveProgressFlag = true;
 
-            this.circleInProgress.position.x = x;
-            this.circleInProgress.position.y = y;
-            this.circleInProgress.position.z = 5;
-
-            this.addLine(this.lineFirstPoint, this.lineFirstPoint + 0.25, this.lineLevels);
+            // this.currentCurveColor = new THREE.Color(this.getHSLColor(70));
+            this.addLine(this.lineFirstPoint, this.lineFirstPoint + 0.25, this.lineLevels, this.currentCurveColor);
 
             // this.scene.add(this.circleInProgress)
         }
@@ -84,9 +112,14 @@ class Vornoi2D {
             this.lineSecondPoint = point;
             // this.scene.remove(this.circleInProgress);
 
-            this.lineProgressFlag = false;
-            this.lineFirstPoint = null;
-            this.lineSecondPoint = null;
+            if(this.curveProgressFlag == true) {
+                this.lineFirstPoint = this.lineSecondPoint;
+                this.addLine(this.lineFirstPoint, this.lineFirstPoint + 0.25, this.lineLevels, this.currentCurveColor);
+            }
+
+            // this.lineProgressFlag = false;
+            // this.lineFirstPoint = null;
+            // this.lineSecondPoint = null;
         }
         // this.addPoint(point, this.getRandomColor());
     }
@@ -163,7 +196,7 @@ class Vornoi2D {
         }
     }
 
-    addLine(point1, point2, levels) {
+    addLine(point1, point2, levels, color) {
         var line = this.makeLine(point1, point2, levels, [point1, point2]);
         console.log(line);
 
@@ -171,7 +204,7 @@ class Vornoi2D {
         this.circles[this.voroSegments] = [];
 
         // var color = this.getRandomColor();
-        var color = new THREE.Color(this.getHSLColor(70));
+        // var color = new THREE.Color(this.getHSLColor(70));
 
         var seed, circle, cone;
         
@@ -255,6 +288,9 @@ var animate = function () {
 
 document.addEventListener("click", mouseClick);
 document.addEventListener("mousemove", mouseMove);
+document.body.onkeyup = function(e){
+    V.keyboardEventCallback(e)
+;}
 
 animate();
 
