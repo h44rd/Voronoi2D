@@ -30,6 +30,7 @@ class Vornoi2D {
         this.voroSegments = 0;
         this.cones = [];
         this.circles = [];
+        this.lineSegments = [];
 
         this.pointsIndices = []; // Points members in this.cones and this.circles
         this.lineIndices = [];  // Line members in this.cones and this.circles
@@ -81,6 +82,7 @@ class Vornoi2D {
     }
 
     deleteLine(lineIndex) {
+        this.scene.remove(this.lineSegments[lineIndex]);
         for(var i = 0; i < this.cones[lineIndex].length; i++) {
             this.scene.remove(this.cones[lineIndex][i]);
             this.scene.remove(this.circles[lineIndex][i]);
@@ -187,6 +189,14 @@ class Vornoi2D {
     modifyLine(lineIndex, point1, point2, levels) {
         var line = this.makeLine(point1, point2, levels, [point1, point2]);
 
+        // this.lineSegments[lineIndex].v1 = point1;
+        // this.lineSegments[lineIndex].v2 = point2;
+        var points = [];
+        points.push( new THREE.Vector3( point1.x, point1.y, 5 ) );
+        points.push( new THREE.Vector3( point2.x, point2.y, 5 ) );
+        
+        this.lineSegments[lineIndex].geometry.setFromPoints(points);
+
         for(var i = 0; i < this.cones[lineIndex].length; i++) {
             this.cones[lineIndex][i].position.x = line[i].x;
             this.circles[lineIndex][i].position.x = line[i].x;
@@ -202,6 +212,19 @@ class Vornoi2D {
 
         this.cones[this.voroSegments] = [];
         this.circles[this.voroSegments] = [];
+        
+
+        var material = new THREE.LineBasicMaterial( { color: 0x0000ff } );
+        var points = [];
+        points.push( new THREE.Vector3( point1.x, point1.y, 5 ) );
+        points.push( new THREE.Vector3( point2.x, point2.y, 5 ) );
+        var geometry = new THREE.BufferGeometry().setFromPoints( points );
+
+        var lineSegment = new THREE.Line( geometry, material );
+        this.scene.add(lineSegment);
+        
+        this.lineSegments[this.voroSegments] = lineSegment;
+
 
         // var color = this.getRandomColor();
         // var color = new THREE.Color(this.getHSLColor(70));
@@ -217,7 +240,7 @@ class Vornoi2D {
             this.circles[this.voroSegments].push(circle);
 
             this.scene.add(cone);
-            this.scene.add(circle);
+            // this.scene.add(circle);
         }
 
         this.lineIndices.push(this.voroSegments);
