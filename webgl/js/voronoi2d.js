@@ -1,3 +1,12 @@
+var VoroGUI = function () {
+    this.planeMode = false;
+}
+
+var Vgui = new VoroGUI();
+var gui = new dat.GUI();
+var controller = gui.add(Vgui, 'planeMode', false);
+controller.listen();
+
 class Vornoi2D {
     
     constructor() {
@@ -11,7 +20,7 @@ class Vornoi2D {
         this.camera.lookAt(this.scene.position);
 
         this.colorHue = 2;
-        this.colorPrime = 53;
+        this.colorPrime = 73;
 
         this.coneRadius = 0.3;
         this.coneHeight = 1;
@@ -29,25 +38,30 @@ class Vornoi2D {
 
         this.voroSegments = 0;
         this.cones = [];
-        this.circles = [];
+        // this.circles = [];
         this.lineSegments = [];
 
         this.pointsIndices = []; // Points members in this.cones and this.circles
         this.lineIndices = [];  // Line members in this.cones and this.circles
 
         this.curveProgressFlag = false;
-        this.currentCurveColor = new THREE.Color(this.getHSLColor(70));
+        this.currentCurveColor = this.getHSLColor(70);
 
         this.lineFirstPoint = null;
         this.lineSecondPoint = null;
         this.lineProgressFlag = false;
         this.lineLevels = 5;
-        var geometry = new THREE.CircleGeometry(this.pointRadius, this.pointSegments);
-        var material = new THREE.MeshBasicMaterial({ color: new THREE.Color(this.getHSLColor(70)) });
-        this.circleInProgress = new THREE.Mesh(geometry, material);
 
-        geometry = new THREE.PlaneGeometry(10, 10);
-        material = new THREE.MeshBasicMaterial({ color: new THREE.Color(this.getHSLColor(70)) });
+        this.lineSegmentWidth = 3;
+
+        this.planeMode = false;
+
+        // var geometry = new THREE.CircleGeometry(this.pointRadius, this.pointSegments);
+        // var material = new THREE.MeshBasicMaterial({ color: this.getHSLColor(70)[0] });
+        // this.circleInProgress = new THREE.Mesh(geometry, material);
+
+        var geometry = new THREE.PlaneGeometry(10, 10);
+        var material = new THREE.MeshBasicMaterial({ color: this.getHSLColor(70)[0] });
         this.plane = new THREE.Mesh(geometry, material);
         this.scene.add(this.plane);
 
@@ -63,30 +77,48 @@ class Vornoi2D {
 
     mouseMoveCallback(event) {
         var coords = this.getCoordsFromEvent(event);
-        this.lineSecondPoint = new THREE.Vector2(coords[0], coords[1]);
+        
+        if(this.planeMode)
+            this.movePlane(new THREE.Vector2(coords[0], coords[1]));
+        else
+            this.lineSecondPoint = new THREE.Vector2(coords[0], coords[1]);
     }
 
     keyboardEventCallback(event) {
-        if(event.keyCode == 32 || event.key == ' '){
-            this.spacebarCallBack();
+        if(event.keyCode == 27){
+            this.escCallBack();
+        }
+        if(event.keyCode == 80){
+            this.planekeyCallBack();
         }
     }
 
-    spacebarCallBack() {
+    escCallBack() {
         if(this.curveProgressFlag == true) {
             this.deleteLine(this.voroSegments - 1);
             this.curveProgressFlag = false;
             this.lineProgressFlag = false;
-            this.currentCurveColor = new THREE.Color(this.getHSLColor(70));
+            this.currentCurveColor = this.getHSLColor(70);
         }
+    }
+
+    planekeyCallBack() {
+        this.planeMode = !this.planeMode;
+
+        Vgui.planeMode = this.planeMode;
     }
 
     deleteLine(lineIndex) {
         this.scene.remove(this.lineSegments[lineIndex]);
         for(var i = 0; i < this.cones[lineIndex].length; i++) {
             this.scene.remove(this.cones[lineIndex][i]);
-            this.scene.remove(this.circles[lineIndex][i]);
+            // this.scene.remove(this.circles[lineIndex][i]);
         }
+    }
+
+    movePlane(coords) {
+        this.plane.rotation.y = coords.x;
+        this.plane.rotation.x = -1 * coords.y;
     }
 
     addPointClickCallback(event) {
@@ -96,9 +128,9 @@ class Vornoi2D {
         var point = new THREE.Vector2(x, y);
 
 
-        this.circleInProgress.position.x = x;
-        this.circleInProgress.position.y = y;
-        this.circleInProgress.position.z = 5;
+        // this.circleInProgress.position.x = x;
+        // this.circleInProgress.position.y = y;
+        // this.circleInProgress.position.z = 5;
 
         if(this.lineProgressFlag == false) {
             this.lineFirstPoint = point;
@@ -135,7 +167,12 @@ class Vornoi2D {
 
     getHSLColor(S) {
         this.colorHue = (this.colorHue + this.colorPrime) % 360;
-        return "hsl(" + this.colorHue.toString(10) + ", " + S.toString(10) + "%, 70%)"; 
+        console.log(this.colorHue);
+
+        var color1 = new THREE.Color("hsl(" + this.colorHue.toString(10) + ", " + S.toString(10) + "%, 70%)");
+        var color2 = new THREE.Color("hsl(" + this.colorHue.toString(10) + ", " + (S - 40).toString(10) + "%, 50%)");
+
+        return [color1, color2];
     }
     getRandomColor() {
         var letters = '0123456789ABCDEF';
@@ -147,16 +184,16 @@ class Vornoi2D {
     }
 
     makeSeed(point, color) {
-        var geometry = new THREE.CircleGeometry( this.pointRadius, this.pointSegments );
-        var material = new THREE.MeshBasicMaterial( { color: 0x000000 } );
-        this.circle = new THREE.Mesh( geometry, material );
-        this.circle.position.x = point.x;
-        this.circle.position.y = point.y;
-        this.circle.position.z = 5;
+        // var geometry = new THREE.CircleGeometry( this.pointRadius, this.pointSegments );
+        // var material = new THREE.MeshBasicMaterial( { color: 0x000000 } );
+        // this.circle = new THREE.Mesh( geometry, material );
+        // this.circle.position.x = point.x;
+        // this.circle.position.y = point.y;
+        // this.circle.position.z = 5;
 
         
-        geometry = new THREE.ConeGeometry(this.coneRadius, this.coneHeight, this.coneSegments);
-        material = new THREE.MeshBasicMaterial({
+        var geometry = new THREE.ConeGeometry(this.coneRadius, this.coneHeight, this.coneSegments);
+        var material = new THREE.MeshBasicMaterial({
             color: color
         });
         this.cone = new THREE.Mesh(geometry, material);
@@ -164,18 +201,19 @@ class Vornoi2D {
         this.cone.position.y = point.y;
         this.cone.rotation.x = Math.PI/2;
 
-        return {cone: this.cone, circle: this.circle };
+        // return {cone: this.cone, circle: this.circle };
+        return {cone: this.cone};
     }
 
     addPoint(point, color) {
         var seed = this.makeSeed(point, color);
-        var circle = seed.circle;
+        // var circle = seed.circle;
         var cone = seed.cone;
         
         this.cones[this.voroSegments] = [];
-        this.circles[this.voroSegments] = [];
+        // this.circles[this.voroSegments] = [];
         this.cones[this.voroSegments].push(cone);
-        this.circles[this.voroSegments].push(circle);
+        // this.circles[this.voroSegments].push(circle);
 
         this.pointsIndices.push(this.voroSegments);
         this.voroSegments += 1;
@@ -183,7 +221,7 @@ class Vornoi2D {
         console.log(this.cones);
 
         this.scene.add(cone);
-        this.scene.add(circle);
+        // this.scene.add(circle);
     }
 
     modifyLine(lineIndex, point1, point2, levels) {
@@ -191,6 +229,7 @@ class Vornoi2D {
 
         // this.lineSegments[lineIndex].v1 = point1;
         // this.lineSegments[lineIndex].v2 = point2;
+        
         var points = [];
         points.push( new THREE.Vector3( point1.x, point1.y, 5 ) );
         points.push( new THREE.Vector3( point2.x, point2.y, 5 ) );
@@ -199,22 +238,23 @@ class Vornoi2D {
 
         for(var i = 0; i < this.cones[lineIndex].length; i++) {
             this.cones[lineIndex][i].position.x = line[i].x;
-            this.circles[lineIndex][i].position.x = line[i].x;
+            // this.circles[lineIndex][i].position.x = line[i].x;
 
             this.cones[lineIndex][i].position.y = line[i].y;
-            this.circles[lineIndex][i].position.y = line[i].y;
+            // this.circles[lineIndex][i].position.y = line[i].y;
         }
     }
 
     addLine(point1, point2, levels, color) {
         var line = this.makeLine(point1, point2, levels, [point1, point2]);
-        console.log(line);
+        console.log(color);
 
         this.cones[this.voroSegments] = [];
-        this.circles[this.voroSegments] = [];
+        // this.circles[this.voroSegments] = [];
         
 
-        var material = new THREE.LineBasicMaterial( { color: 0x0000ff } );
+        var material = new THREE.LineBasicMaterial( { color: color[1],
+                                                      linewidth: this.lineSegmentWidth } );
         var points = [];
         points.push( new THREE.Vector3( point1.x, point1.y, 5 ) );
         points.push( new THREE.Vector3( point2.x, point2.y, 5 ) );
@@ -229,15 +269,15 @@ class Vornoi2D {
         // var color = this.getRandomColor();
         // var color = new THREE.Color(this.getHSLColor(70));
 
-        var seed, circle, cone;
+        var seed, cone;
         
         for(var i = 0; i < line.length; i++) {
-            seed = this.makeSeed(line[i], color);
-            circle = seed.circle;
+            seed = this.makeSeed(line[i], color[0]);
+            // circle = seed.circle;
             cone = seed.cone;
             
             this.cones[this.voroSegments].push(cone);
-            this.circles[this.voroSegments].push(circle);
+            // this.circles[this.voroSegments].push(circle);
 
             this.scene.add(cone);
             // this.scene.add(circle);
@@ -318,11 +358,17 @@ document.body.onkeyup = function(e){
 animate();
 
 function mouseClick(event) {
-    V.addPointClickCallback(event);
+    if(!this.planeMode)
+        V.addPointClickCallback(event);
 }
 
 function mouseMove(event) {
     V.mouseMoveCallback(event);
 }
+
+controller.onChange(function(value) {
+    V.planeMode = value;
+});
+
 
 

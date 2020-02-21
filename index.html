@@ -5,17 +5,45 @@
     <style>
         body {
             margin: 0;
+            background-color: #000;
+            /* color: #fff; */
+            font-family: Monospace;
+            font-size: 13px;
+            line-height: 24px;
+            overscroll-behavior: none;
         }
 
         canvas {
             width: 100;
             height: 100;
         }
+
+        #info {
+            position: absolute;
+            bottom: 0px;
+            /* right: 0px; */
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            text-align: center;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            pointer-events: none;
+            z-index: 1; /* TODO Solve this in HTML */
+        }
     </style>
 </head>
 
 <body>
+    <div id="info">
+        Controls <br>
+        P : Plane Rotation Mode <br>
+        Esc : End line
+    </div>
     <script src="webgl/js/three.js"></script>
+    <script src="webgl/js/dat.gui.js"></script>
     <script src="webgl/js/voronoi2d.js"></script>
 </body>
 
