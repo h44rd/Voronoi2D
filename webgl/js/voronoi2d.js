@@ -52,9 +52,13 @@ class Vornoi2D {
         this.lineProgressFlag = false;
         this.lineLevels = 5;
 
-        this.lineSegmentWidth = 3;
+        this.lineSegmentWidth = 5;
 
         this.planeMode = false;
+
+        this.latestMouseCoords = null;
+
+        this.planeMouseCoords = null;
 
         // var geometry = new THREE.CircleGeometry(this.pointRadius, this.pointSegments);
         // var material = new THREE.MeshBasicMaterial({ color: this.getHSLColor(70)[0] });
@@ -77,11 +81,12 @@ class Vornoi2D {
 
     mouseMoveCallback(event) {
         var coords = this.getCoordsFromEvent(event);
-        
+        this.latestMouseCoords = new THREE.Vector2(coords[0], coords[1]);
+
         if(this.planeMode)
-            this.movePlane(new THREE.Vector2(coords[0], coords[1]));
+            this.movePlane(this.latestMouseCoords);
         else
-            this.lineSecondPoint = new THREE.Vector2(coords[0], coords[1]);
+            this.lineSecondPoint = this.latestMouseCoords;
     }
 
     keyboardEventCallback(event) {
@@ -103,6 +108,8 @@ class Vornoi2D {
     }
 
     planekeyCallBack() {
+        this.planeMouseCoords = this.latestMouseCoords;
+
         this.planeMode = !this.planeMode;
 
         Vgui.planeMode = this.planeMode;
@@ -117,8 +124,8 @@ class Vornoi2D {
     }
 
     movePlane(coords) {
-        this.plane.rotation.y = coords.x;
-        this.plane.rotation.x = -1 * coords.y;
+        this.plane.rotation.y =  coords.x;
+        this.plane.rotation.x = -1 * (coords.y);
     }
 
     addPointClickCallback(event) {
@@ -170,7 +177,7 @@ class Vornoi2D {
         console.log(this.colorHue);
 
         var color1 = new THREE.Color("hsl(" + this.colorHue.toString(10) + ", " + S.toString(10) + "%, 70%)");
-        var color2 = new THREE.Color("hsl(" + this.colorHue.toString(10) + ", " + (S - 40).toString(10) + "%, 50%)");
+        var color2 = new THREE.Color("hsl(" + this.colorHue.toString(10) + ", " + (S - 40).toString(10) + "%, 60%)");
 
         return [color1, color2];
     }
@@ -358,8 +365,10 @@ document.body.onkeyup = function(e){
 animate();
 
 function mouseClick(event) {
-    if(!this.planeMode)
+    if(!V.planeMode) {
+        console.log(V.planeMode)
         V.addPointClickCallback(event);
+    }
 }
 
 function mouseMove(event) {
