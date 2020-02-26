@@ -111,7 +111,7 @@ class Vornoi2D {
             this.deleteLine(this.voroSegments - 1);
             this.curveProgressFlag = false;
             this.lineProgressFlag = false;
-            this.currentCurveColor = this.getHSLColor(70);
+            // this.currentCurveColor = this.getHSLColor(70);
         }
     }
 
@@ -190,7 +190,7 @@ class Vornoi2D {
                 
             } else {
                 // this.currentCurveColor = new THREE.Color(this.getHSLColor(70));
-
+                this.currentCurveColor = this.getHSLColor(70);
                 this.addLine(this.lineFirstPoint, this.lineFirstPoint + 0.25, this.lineLevels, this.currentCurveColor);
 
                 // this.scene.add(this.circleInProgress)
