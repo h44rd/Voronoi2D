@@ -159,31 +159,35 @@ class Vornoi2D {
 
             if(this.treeMode) {
                 this.treeMode = false;
+                Vgui.treeMode = false;
 
-                var minDistance = Infinity;
-                var firstPoint;
-                var color;
+                if(this.lineVertices.size > 0) {
+                    var minDistance = Infinity;
+                    var firstPoint;
+                    var color;
 
 
-                for(let [key, value] of this.lineVertices) {
-                    console.log(key);
-                    console.log("Distance: " + point.distanceTo(key));
-                    if(point.distanceTo(key) < minDistance) {
-                        
-                        minDistance = point.distanceTo(key);
-
-                        firstPoint = key;
-                        color = value;
+                    for(let [key, value] of this.lineVertices) {
                         console.log(key);
-                    }
-                }
-            
-                console.log("Firstpoint :" + minDistance);
-                this.lineFirstPoint = firstPoint;
-                this.currentCurveColor = color;
-                this.lineSecondPoint = point;
+                        console.log("Distance: " + point.distanceTo(key));
+                        if(point.distanceTo(key) < minDistance) {
+                            
+                            minDistance = point.distanceTo(key);
 
-                this.addLine(this.lineFirstPoint, this.lineSecondPoint, this.lineLevels, this.currentCurveColor);
+                            firstPoint = key;
+                            color = value;
+                            console.log(key);
+                        }
+                    }
+                
+                    console.log("Firstpoint :" + minDistance);
+                    this.lineFirstPoint = firstPoint;
+                    this.currentCurveColor = color;
+                    this.lineSecondPoint = point;
+
+                    this.addLine(this.lineFirstPoint, this.lineSecondPoint, this.lineLevels, this.currentCurveColor);
+                }
+                
             } else {
                 // this.currentCurveColor = new THREE.Color(this.getHSLColor(70));
 
