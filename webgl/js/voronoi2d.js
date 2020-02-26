@@ -1,11 +1,14 @@
 var VoroGUI = function () {
     this.planeMode = false;
+    this.treeMode = false;
 }
 
 var Vgui = new VoroGUI();
 var gui = new dat.GUI();
 var controller = gui.add(Vgui, 'planeMode', false);
+var controller2 = gui.add(Vgui, 'treeMode', false);
 controller.listen();
+controller2.listen();
 
 class Vornoi2D {
     
@@ -40,6 +43,7 @@ class Vornoi2D {
         this.cones = [];
         // this.circles = [];
         this.lineSegments = [];
+        this.lineVertices = new Map(); // Maps vertices to colors
 
         this.pointsIndices = []; // Points members in this.cones and this.circles
         this.lineIndices = [];  // Line members in this.cones and this.circles
@@ -55,6 +59,7 @@ class Vornoi2D {
         this.lineSegmentWidth = 5;
 
         this.planeMode = false;
+        this.treeMode = false;
 
         this.latestMouseCoords = null;
 
@@ -96,6 +101,9 @@ class Vornoi2D {
         if(event.keyCode == 80){
             this.planekeyCallBack();
         }
+        if(event.keyCode == 84){
+            this.treekeyCallBack();
+        }
     }
 
     escCallBack() {
@@ -113,6 +121,11 @@ class Vornoi2D {
         this.planeMode = !this.planeMode;
 
         Vgui.planeMode = this.planeMode;
+    }
+
+    treekeyCallBack() {
+        this.treeMode = !this.treeMode;
+        Vgui.treeMode = this.treeMode;
     }
 
     deleteLine(lineIndex) {
@@ -138,20 +151,55 @@ class Vornoi2D {
         // this.circleInProgress.position.x = x;
         // this.circleInProgress.position.y = y;
         // this.circleInProgress.position.z = 5;
-
+        
         if(this.lineProgressFlag == false) {
             this.lineFirstPoint = point;
             this.lineProgressFlag = true;
             this.curveProgressFlag = true;
 
-            // this.currentCurveColor = new THREE.Color(this.getHSLColor(70));
-            this.addLine(this.lineFirstPoint, this.lineFirstPoint + 0.25, this.lineLevels, this.currentCurveColor);
+            if(this.treeMode) {
+                this.treeMode = false;
 
-            // this.scene.add(this.circleInProgress)
+                var minDistance = Infinity;
+                var firstPoint;
+                var color;
+
+
+                for(let [key, value] of this.lineVertices) {
+                    console.log(key);
+                    console.log("Distance: " + point.distanceTo(key));
+                    if(point.distanceTo(key) < minDistance) {
+                        
+                        minDistance = point.distanceTo(key);
+
+                        firstPoint = key;
+                        color = value;
+                        console.log(key);
+                    }
+                }
+            
+                console.log("Firstpoint :" + minDistance);
+                this.lineFirstPoint = firstPoint;
+                this.currentCurveColor = color;
+                this.lineSecondPoint = point;
+
+                this.addLine(this.lineFirstPoint, this.lineSecondPoint, this.lineLevels, this.currentCurveColor);
+            } else {
+                // this.currentCurveColor = new THREE.Color(this.getHSLColor(70));
+
+                this.addLine(this.lineFirstPoint, this.lineFirstPoint + 0.25, this.lineLevels, this.currentCurveColor);
+
+                // this.scene.add(this.circleInProgress)
+            }
+
         }
         else {
             this.lineSecondPoint = point;
             // this.scene.remove(this.circleInProgress);
+            console.log("First point: ");
+            console.log(this.lineVertices);
+            this.lineVertices.set(this.lineFirstPoint, this.currentCurveColor);
+            this.lineVertices.set(this.lineSecondPoint, this.currentCurveColor);
 
             if(this.curveProgressFlag == true) {
                 this.lineFirstPoint = this.lineSecondPoint;
@@ -377,6 +425,10 @@ function mouseMove(event) {
 
 controller.onChange(function(value) {
     V.planeMode = value;
+});
+
+controller2.onChange(function(value) {
+    V.treeMode = value;
 });
 
 
