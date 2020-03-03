@@ -1,12 +1,14 @@
 var VoroGUI = function () {
     this.planeMode = false;
     this.treeMode = false;
+    this.shape = 'normalCone';
 }
 
 var Vgui = new VoroGUI();
 var gui = new dat.GUI();
 var controller = gui.add(Vgui, 'planeMode', false);
 var controller2 = gui.add(Vgui, 'treeMode', false);
+var controller3 = gui.add(Vgui, 'shape', ['normalCone', 'starCone']);
 controller.listen();
 controller2.listen();
 
@@ -64,6 +66,10 @@ class Vornoi2D {
         this.latestMouseCoords = null;
 
         this.planeMouseCoords = null;
+
+        this.coneShape = 'normalCone';
+        this.customConeLoaded = false;
+        this.customCone = new THREE.Object3D();
 
         // var geometry = new THREE.CircleGeometry(this.pointRadius, this.pointSegments);
         // var material = new THREE.MeshBasicMaterial({ color: this.getHSLColor(70)[0] });
@@ -233,6 +239,7 @@ class Vornoi2D {
 
         return [color1, color2];
     }
+
     getRandomColor() {
         var letters = '0123456789ABCDEF';
         var color = '#';
@@ -250,12 +257,17 @@ class Vornoi2D {
         // this.circle.position.y = point.y;
         // this.circle.position.z = 5;
 
-        
+
         var geometry = new THREE.ConeGeometry(this.coneRadius, this.coneHeight, this.coneSegments);
         var material = new THREE.MeshBasicMaterial({
             color: color
         });
         this.cone = new THREE.Mesh(geometry, material);
+        
+        if(this.coneShape != 'normalCone' && this.customConeLoaded == true) {
+            this.cone = new THREE.Object3D().copy(this.customCone);
+            this.cone.material = material;
+        }
         this.cone.position.x = point.x;
         this.cone.position.y = point.y;
         this.cone.rotation.x = Math.PI/2;
@@ -357,6 +369,31 @@ class Vornoi2D {
         return points;
     }
 
+    loadCustomShape(objectType) {
+        if(objectType != 'normalCone') {
+            var loader = new THREE.OBJLoader();
+
+            var shapeFile;
+
+            if(objectType == 'starCone') {
+                shapeFile = 'webgl/models/star.obj';
+            }
+
+            loader.load(
+                shapeFile,
+                function(object) {
+                    this.customConeLoaded = true;
+                    this.customCone = object;
+                },
+                function (xhr){
+                    console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+                },
+                function ( error ) {
+                    console.log( 'An error happened' );
+                }
+            );
+        }
+    }
 }
 
 class PointVoronoi {
@@ -435,5 +472,10 @@ controller2.onChange(function(value) {
     V.treeMode = value;
 });
 
+controller3.onChange(function(value) {
+    V.coneShape = value;
+    V.customConeLoaded = false;
+    V.loadCustomShape(value);
+});
 
 
