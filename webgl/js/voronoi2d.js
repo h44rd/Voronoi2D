@@ -266,7 +266,9 @@ class Vornoi2D {
         
         if(this.coneShape != 'normalCone' && this.customConeLoaded == true) {
             this.cone = new THREE.Object3D().copy(this.customCone);
-            this.cone.material = material;
+            console.log(this.cone);
+            this.cone.children[0].material = material;
+            this.cone.scale = 0.5 * this.cone.scale;
         }
         this.cone.position.x = point.x;
         this.cone.position.y = point.y;
@@ -368,32 +370,6 @@ class Vornoi2D {
         this.makeLine(midpoint, point2, levels - 1, points);
         return points;
     }
-
-    loadCustomShape(objectType) {
-        if(objectType != 'normalCone') {
-            var loader = new THREE.OBJLoader();
-
-            var shapeFile;
-
-            if(objectType == 'starCone') {
-                shapeFile = 'webgl/models/star.obj';
-            }
-
-            loader.load(
-                shapeFile,
-                function(object) {
-                    this.customConeLoaded = true;
-                    this.customCone = object;
-                },
-                function (xhr){
-                    console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
-                },
-                function ( error ) {
-                    console.log( 'An error happened' );
-                }
-            );
-        }
-    }
 }
 
 class PointVoronoi {
@@ -475,7 +451,32 @@ controller2.onChange(function(value) {
 controller3.onChange(function(value) {
     V.coneShape = value;
     V.customConeLoaded = false;
-    V.loadCustomShape(value);
+    loadCustomShape(value);
 });
 
 
+function loadCustomShape(objectType) {
+    if(objectType != 'normalCone') {
+        var loader = new THREE.OBJLoader();
+
+        var shapeFile;
+
+        if(objectType == 'starCone') {
+            shapeFile = 'https://raw.githubusercontent.com/h44rd/Voronoi2D/gh-pages/webgl/models/star.obj';
+        }
+
+        loader.load(
+            shapeFile,
+            function(object) {
+                V.customConeLoaded = true;
+                V.customCone = object;
+            },
+            function (xhr){
+                console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+            },
+            function ( error ) {
+                console.log( 'An error happened' );
+            }
+        );
+    }
+}
