@@ -70,6 +70,16 @@ class Vornoi2D {
         this.coneShape = 'normalCone';
         this.customConeLoaded = false;
         this.customCone = new THREE.Object3D();
+        this.customCones = {
+            'normalCone' : {
+                isLoaded : false,
+                coneObject : null
+            },
+            'starCone' : {
+                isLoaded : false,
+                coneObject : null
+            }
+        };
 
         // var geometry = new THREE.CircleGeometry(this.pointRadius, this.pointSegments);
         // var material = new THREE.MeshBasicMaterial({ color: this.getHSLColor(70)[0] });
@@ -260,15 +270,20 @@ class Vornoi2D {
 
         var geometry = new THREE.ConeGeometry(this.coneRadius, this.coneHeight, this.coneSegments);
         var material = new THREE.MeshBasicMaterial({
-            color: color
+            color: color,
+            polygonOffset: true,
+            polygonOffsetFactor: 1, // positive value pushes polygon further away
+            polygonOffsetUnits: 1
         });
         this.cone = new THREE.Mesh(geometry, material);
         
-        if(this.coneShape != 'normalCone' && this.customConeLoaded == true) {
-            this.cone = new THREE.Object3D().copy(this.customCone);
-            console.log(this.cone);
+        if(this.coneShape != 'normalCone' && this.customCones[this.coneShape].isLoaded == true) {
+            this.cone = new THREE.Object3D().copy(this.customCones[this.coneShape].coneObject);
+            // console.log(this.cone);
             this.cone.children[0].material = material;
-            this.cone.scale = 0.5 * this.cone.scale;
+            this.cone.children[0].scale.y = this.aspect;
+            // this.cone.scale.z = 0.5;
+            // this.cone.scale = 0.5 * this.cone.scale;
         }
         this.cone.position.x = point.x;
         this.cone.position.y = point.y;
@@ -400,6 +415,9 @@ class PointVoronoi {
 
 V = new Vornoi2D();
 
+var firstSeed = V.makeSeed(new THREE.Vector2(0,0) , V.getRandomColor());
+V.scene.add(firstSeed.cone);
+
 // a = new THREE.Vector2(-0.25, 0.5)
 // b = new THREE.Vector2(0.5, 0.5);
 
@@ -418,6 +436,7 @@ V = new Vornoi2D();
 
 var animate = function () {
     requestAnimationFrame(animate);
+    // firstSeed.cone.rotateZ(0.01);
     V.render();
 };
 
@@ -450,33 +469,49 @@ controller2.onChange(function(value) {
 
 controller3.onChange(function(value) {
     V.coneShape = value;
-    V.customConeLoaded = false;
+    // V.customConeLoaded = false;
+
+    if(!V.customCones[value].isLoaded) {
+        V.customCones[value].isLoaded = false;
+        V.customCones[value].coneObject = null;
+    }
+    
     loadCustomShape(value);
 });
 
 
 function loadCustomShape(objectType) {
     if(objectType != 'normalCone') {
-        var loader = new THREE.OBJLoader();
 
-        var shapeFile;
+        if(V.customCones[objectType].isLoaded != true) {
+            
+            var loader = new THREE.OBJLoader();
 
-        if(objectType == 'starCone') {
-            shapeFile = 'https://raw.githubusercontent.com/h44rd/Voronoi2D/gh-pages/webgl/models/star.obj';
-        }
+            var shapeFile;
 
-        loader.load(
-            shapeFile,
-            function(object) {
-                V.customConeLoaded = true;
-                V.customCone = object;
-            },
-            function (xhr){
-                console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
-            },
-            function ( error ) {
-                console.log( 'An error happened' );
+            if(objectType == 'starCone') {
+                shapeFile = 'https://raw.githubusercontent.com/h44rd/Voronoi2D/gh-pages/webgl/models/star.obj';
             }
-        );
+
+            loader.load(
+                shapeFile,
+                function(object) {
+                    V.customCones[objectType].isLoaded = true;
+                    V.customCones[objectType].coneObject = object;
+                    
+                    V.coneShape = objectType;
+                    V.scene.remove(firstSeed.cone);
+                    firstSeed = V.makeSeed(new THREE.Vector2(0,0) , V.getRandomColor());
+                    V.scene.add(firstSeed.cone);
+                },
+                function (xhr){
+                    console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+                },
+                function ( error ) {
+                    console.log( 'An error happened' );
+                }
+            );    
+        }
+        
     }
 }
