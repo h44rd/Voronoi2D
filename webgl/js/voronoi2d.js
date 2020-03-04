@@ -8,7 +8,7 @@ var Vgui = new VoroGUI();
 var gui = new dat.GUI();
 var controller = gui.add(Vgui, 'planeMode', false);
 var controller2 = gui.add(Vgui, 'treeMode', false);
-var controller3 = gui.add(Vgui, 'shape', ['normalCone', 'starCone']);
+var controller3 = gui.add(Vgui, 'shape', ['normalCone', 'starCone', 'plusCone']);
 controller.listen();
 controller2.listen();
 
@@ -78,6 +78,10 @@ class Vornoi2D {
             'starCone' : {
                 isLoaded : false,
                 coneObject : null
+            },
+            'plusCone' : {
+                isLoaded : false,
+                coneObject : null
             }
         };
 
@@ -111,14 +115,27 @@ class Vornoi2D {
     }
 
     keyboardEventCallback(event) {
-        if(event.keyCode == 27){
+        if(event.keyCode == 27){ // Esc
             this.escCallBack();
         }
-        if(event.keyCode == 80){
+
+        if(event.keyCode == 80){ // P
             this.planekeyCallBack();
         }
-        if(event.keyCode == 84){
+
+        if(event.keyCode == 84){ // T
             this.treekeyCallBack();
+        }
+
+        if(event.keyCode == 67) { // C
+            loadCustomShape('normalCone');
+        }
+        
+        if(event.keyCode == 88) { // X
+            loadCustomShape('starCone');
+        } 
+        if(event.keyCode == 90) {  // Z
+            loadCustomShape('plusCone');
         }
     }
 
@@ -282,6 +299,11 @@ class Vornoi2D {
             // console.log(this.cone);
             this.cone.children[0].material = material;
             this.cone.children[0].scale.y = this.aspect;
+
+            this.cone.children[0].scale.y *= 0.3;
+            this.cone.children[0].scale.x *= 0.3;
+            this.cone.children[0].scale.z *= 0.3;
+
             // this.cone.scale.z = 0.5;
             // this.cone.scale = 0.5 * this.cone.scale;
         }
@@ -415,8 +437,8 @@ class PointVoronoi {
 
 V = new Vornoi2D();
 
-var firstSeed = V.makeSeed(new THREE.Vector2(0,0) , V.getRandomColor());
-V.scene.add(firstSeed.cone);
+// var firstSeed = V.makeSeed(new THREE.Vector2(0,0) , V.getRandomColor());
+// V.scene.add(firstSeed.cone);
 
 // a = new THREE.Vector2(-0.25, 0.5)
 // b = new THREE.Vector2(0.5, 0.5);
@@ -434,10 +456,15 @@ V.scene.add(firstSeed.cone);
 
 // V.addLine(a, b, 5);
 
+var angle = 0;
 var animate = function () {
     requestAnimationFrame(animate);
     // firstSeed.cone.rotateZ(0.01);
     V.render();
+    // V.camera.position.y = 5 * Math.sin(angle);
+    // V.camera.position.z = 5 * Math.cos(angle);
+    // V.camera.lookAt(new THREE.Vector3(0,0,0));
+    // angle += 0.01;
 };
 
 document.addEventListener("click", mouseClick);
@@ -468,19 +495,19 @@ controller2.onChange(function(value) {
 });
 
 controller3.onChange(function(value) {
-    V.coneShape = value;
-    // V.customConeLoaded = false;
-
-    if(!V.customCones[value].isLoaded) {
-        V.customCones[value].isLoaded = false;
-        V.customCones[value].coneObject = null;
-    }
-    
     loadCustomShape(value);
 });
 
 
 function loadCustomShape(objectType) {
+    V.coneShape = objectType;
+    // V.customConeLoaded = false;
+
+    if(!V.customCones[objectType] == null) {
+        V.customCones[objectType].isLoaded = false;
+        V.customCones[objectType].coneObject = null;
+    }
+
     if(objectType != 'normalCone') {
 
         if(V.customCones[objectType].isLoaded != true) {
@@ -492,6 +519,9 @@ function loadCustomShape(objectType) {
             if(objectType == 'starCone') {
                 shapeFile = 'https://raw.githubusercontent.com/h44rd/Voronoi2D/gh-pages/webgl/models/star.obj';
             }
+            if(objectType == 'plusCone') {
+                shapeFile = 'https://raw.githubusercontent.com/h44rd/Voronoi2D/gh-pages/webgl/models/plus.obj';
+            }
 
             loader.load(
                 shapeFile,
@@ -499,10 +529,10 @@ function loadCustomShape(objectType) {
                     V.customCones[objectType].isLoaded = true;
                     V.customCones[objectType].coneObject = object;
                     
-                    V.coneShape = objectType;
-                    V.scene.remove(firstSeed.cone);
-                    firstSeed = V.makeSeed(new THREE.Vector2(0,0) , V.getRandomColor());
-                    V.scene.add(firstSeed.cone);
+                    // V.coneShape = objectType;
+                    // V.scene.remove(firstSeed.cone);
+                    // firstSeed = V.makeSeed(new THREE.Vector2(0,0) , V.getRandomColor());
+                    // V.scene.add(firstSeed.cone);
                 },
                 function (xhr){
                     console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
