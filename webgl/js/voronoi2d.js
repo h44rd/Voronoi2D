@@ -8,7 +8,7 @@ var Vgui = new VoroGUI();
 var gui = new dat.GUI();
 var controller = gui.add(Vgui, 'planeMode', false);
 var controller2 = gui.add(Vgui, 'treeMode', false);
-var controller3 = gui.add(Vgui, 'shape', ['normalCone', 'starCone', 'plusCone']);
+var controller3 = gui.add(Vgui, 'shape', ['normalCone', 'starCone', 'plusCone', 'sixStarCone']);
 controller.listen();
 controller2.listen();
 
@@ -82,6 +82,10 @@ class Vornoi2D {
             'plusCone' : {
                 isLoaded : false,
                 coneObject : null
+            },
+            'sixStarCone' : {
+                isLoaded : false,
+                coneObject : null
             }
         };
 
@@ -136,6 +140,9 @@ class Vornoi2D {
         } 
         if(event.keyCode == 90) {  // Z
             loadCustomShape('plusCone');
+        }
+        if(event.keyCode == 86) {  // Z
+            loadCustomShape('sixStarCone');
         }
     }
 
@@ -521,6 +528,9 @@ function loadCustomShape(objectType) {
             }
             if(objectType == 'plusCone') {
                 shapeFile = 'https://raw.githubusercontent.com/h44rd/Voronoi2D/gh-pages/webgl/models/plus.obj';
+            }
+            if(objectType == 'sixStarCone') {
+                shapeFile = 'https://raw.githubusercontent.com/h44rd/Voronoi2D/gh-pages/webgl/models/sixStar.obj';
             }
 
             loader.load(
