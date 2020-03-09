@@ -2,6 +2,7 @@ var VoroGUI = function () {
     this.planeMode = false;
     this.treeMode = false;
     this.shape = 'normalCone';
+    this.planeZ = 0.0;
 }
 
 var Vgui = new VoroGUI();
@@ -9,6 +10,7 @@ var gui = new dat.GUI();
 var controller = gui.add(Vgui, 'planeMode', false);
 var controller2 = gui.add(Vgui, 'treeMode', false);
 var controller3 = gui.add(Vgui, 'shape', ['normalCone', 'starCone', 'plusCone', 'sixStarCone']);
+var controller4 = gui.add(Vgui, 'planeZ', -0.5, 0.5);
 controller.listen();
 controller2.listen();
 
@@ -504,6 +506,11 @@ controller2.onChange(function(value) {
 controller3.onChange(function(value) {
     loadCustomShape(value);
 });
+
+controller4.onChange(function(value) {
+    V.plane.position.z = value;
+});
+
 
 
 function loadCustomShape(objectType) {
