@@ -476,39 +476,6 @@ var animate = function () {
     // angle += 0.01;
 };
 
-divisions = 1/4;
-h_a = new THREE.Vector2(-.5, .5);
-h_b = new THREE.Vector2(-.5 + divisions/2, .5);
-
-for(var j = 0; j < 1/divisions; j++) {
-    for(var i = 0; i < 1/divisions; i++) {
-        V.addLine(h_a, h_b, 5, V.getHSLColor(70));
-        h_a.y -= divisions;
-        h_b.y -= divisions;
-    }
-    h_a.y = .5;
-    h_b.y = .5;
-    h_a.x += divisions;
-    h_b.x += divisions;
-}
-
-
-v_a = new THREE.Vector2(-.5 + divisions/4, .5 - divisions/4);
-v_b = new THREE.Vector2(-.5 + divisions/4, .5 - 3*divisions/4);
-
-for(var j = 0; j < 1/divisions; j++) {
-    for(var i = 0; i < 1/divisions; i++) {
-        V.addLine(v_a, v_b, 5, V.getHSLColor(70));
-        v_a.y -= divisions;
-        v_b.y -= divisions;
-    }
-    v_a.y = .5 - divisions/4;
-    v_b.y = .5 - 3*divisions/4;
-    v_a.x += divisions;
-    v_b.x += divisions;
-}
-
-
 document.addEventListener("click", mouseClick);
 document.addEventListener("mousemove", mouseMove);
 document.body.onkeyup = function(e){
