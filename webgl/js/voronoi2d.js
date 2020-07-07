@@ -2,7 +2,7 @@ var VoroGUI = function () {
     this.planeMode = false;
     this.treeMode = false;
     this.shape = 'normalCone';
-    this.planeZ = 0.0;
+    this.planeZ = 0.5;
 }
 
 var Vgui = new VoroGUI();
@@ -10,7 +10,7 @@ var gui = new dat.GUI();
 var controller = gui.add(Vgui, 'planeMode', false);
 var controller2 = gui.add(Vgui, 'treeMode', false);
 var controller3 = gui.add(Vgui, 'shape', ['normalCone', 'starCone', 'plusCone', 'sixStarCone']);
-var controller4 = gui.add(Vgui, 'planeZ', -0.5, 0.5);
+var controller4 = gui.add(Vgui, 'planeZ', -1.0, 1.0);
 controller.listen();
 controller2.listen();
 
@@ -45,6 +45,7 @@ class Vornoi2D {
 
         this.voroSegments = 0;
         this.cones = [];
+        this.prisms = [];
         // this.circles = [];
         this.lineSegments = [];
         this.lineVertices = new Map(); // Maps vertices to colors
@@ -91,6 +92,9 @@ class Vornoi2D {
             }
         };
 
+        this.prismGeometry = {};
+        this.createPrismGeometry();
+
         // var geometry = new THREE.CircleGeometry(this.pointRadius, this.pointSegments);
         // var material = new THREE.MeshBasicMaterial({ color: this.getHSLColor(70)[0] });
         // this.circleInProgress = new THREE.Mesh(geometry, material);
@@ -98,6 +102,7 @@ class Vornoi2D {
         var geometry = new THREE.PlaneGeometry(10, 10);
         var material = new THREE.MeshBasicMaterial({ color: this.getHSLColor(70)[0] });
         this.plane = new THREE.Mesh(geometry, material);
+        this.plane.position.z = 0.5;
         this.scene.add(this.plane);
 
         document.body.appendChild(this.renderer.domElement);
@@ -172,6 +177,7 @@ class Vornoi2D {
 
     deleteLine(lineIndex) {
         this.scene.remove(this.lineSegments[lineIndex]);
+        this.scene.remove(this.prisms[lineIndex]);
         for(var i = 0; i < this.cones[lineIndex].length; i++) {
             this.scene.remove(this.cones[lineIndex][i]);
             // this.scene.remove(this.circles[lineIndex][i]);
@@ -318,6 +324,7 @@ class Vornoi2D {
         }
         this.cone.position.x = point.x;
         this.cone.position.y = point.y;
+        this.cone.position.z = this.coneHeight / 2;
         this.cone.rotation.x = Math.PI/2;
 
         // return {cone: this.cone, circle: this.circle };
@@ -355,13 +362,30 @@ class Vornoi2D {
         
         this.lineSegments[lineIndex].geometry.setFromPoints(points);
 
-        for(var i = 0; i < this.cones[lineIndex].length; i++) {
-            this.cones[lineIndex][i].position.x = line[i].x;
-            // this.circles[lineIndex][i].position.x = line[i].x;
+        this.cones[lineIndex][0].position.x = point1.x;
+        this.cones[lineIndex][0].position.y = point1.y;
+        this.cones[lineIndex][1].position.x = point2.x;
+        this.cones[lineIndex][1].position.y = point2.y;
 
-            this.cones[lineIndex][i].position.y = line[i].y;
-            // this.circles[lineIndex][i].position.y = line[i].y;
+        var negative_point_v2 = new THREE.Vector2(point2.x, point2.y);
+        negative_point_v2.negate();
+        var vec1_2 = new THREE.Vector2();
+        vec1_2.addVectors(point1, negative_point_v2);
+        this.prisms[lineIndex].rotation.y = Math.atan(vec1_2.y / vec1_2.x) + Math.PI / 2;
+        if(vec1_2.x >= 0) {
+            this.prisms[lineIndex].rotation.y += Math.PI;
         }
+        this.prisms[lineIndex].scale.z = point1.distanceTo(point2);
+        this.prisms[lineIndex].position.set(point1.x, point1.y, 0);
+
+
+        // for(var i = 0; i < this.cones[lineIndex].length; i++) {
+        //     this.cones[lineIndex][i].position.x = line[i].x;
+        //     // this.circles[lineIndex][i].position.x = line[i].x;
+
+        //     this.cones[lineIndex][i].position.y = line[i].y;
+        //     // this.circles[lineIndex][i].position.y = line[i].y;
+        // }
     }
 
     addLine(point1, point2, levels, color) {
@@ -389,18 +413,33 @@ class Vornoi2D {
         // var color = new THREE.Color(this.getHSLColor(70));
 
         var seed, cone;
-        
-        for(var i = 0; i < line.length; i++) {
-            seed = this.makeSeed(line[i], color[0]);
-            // circle = seed.circle;
-            cone = seed.cone;
-            
-            this.cones[this.voroSegments].push(cone);
-            // this.circles[this.voroSegments].push(circle);
 
-            this.scene.add(cone);
-            // this.scene.add(circle);
-        }
+        seed = this.makeSeed(point1, color[0]);
+        cone = seed.cone;
+        this.cones[this.voroSegments].push(cone);
+        this.scene.add(cone);
+
+        seed = this.makeSeed(point2, color[0]);
+        cone = seed.cone;
+        this.cones[this.voroSegments].push(cone);
+        this.scene.add(cone);
+
+        var prism = this.makePrism(point1, point2, color[0]);
+        this.prisms[this.voroSegments] = prism;
+        this.scene.add(prism);
+
+        
+        // for(var i = 0; i < line.length; i++) {
+        //     seed = this.makeSeed(line[i], color[0]);
+        //     // circle = seed.circle;
+        //     cone = seed.cone;
+            
+        //     this.cones[this.voroSegments].push(cone);
+        //     // this.circles[this.voroSegments].push(circle);
+
+        //     this.scene.add(cone);
+        //     // this.scene.add(circle);
+        // }
 
         this.lineIndices.push(this.voroSegments);
         this.voroSegments += 1;
@@ -416,31 +455,31 @@ class Vornoi2D {
         this.makeLine(midpoint, point2, levels - 1, points);
         return points;
     }
-}
 
-class PointVoronoi {
-    constructor(x, y, color) {
-        this.pointRadius = 0.003;
-        this.pointSegments = 32;
+    createPrismGeometry() {
+        var shape = new THREE.Shape();
+        shape.moveTo(-1 * this.coneRadius, 0);
+        shape.lineTo(0, this.coneHeight);
+        shape.lineTo(this.coneRadius, 0);
+        shape.lineTo(-1 * this.coneRadius, 0);
 
-        var geometry = new THREE.CircleGeometry( this.pointRadius, this.pointSegments );
-        var material = new THREE.MeshBasicMaterial( { color: 0x000000 } );
-        this.circle = new THREE.Mesh( geometry, material );
-        this.circle.position.x = point.x;
-        this.circle.position.y = point.y;
-        this.circle.position.z = 5;
+        this.prismGeometry = new THREE.ExtrudeGeometry(shape, {amount: 1, bevelEnabled: false});
+    }
 
-        this.coneRadius = 3;
-        this.coneHeight = 1;
-        this.coneSegments = 64;
-        geometry = new THREE.ConeGeometry(this.coneRadius, this.coneHeight, this.coneSegments);
-        material = new THREE.MeshBasicMaterial({
-            color: color
+    makePrism(point_v1, point_v2, prism_color) {
+        var material = new THREE.MeshBasicMaterial({
+            color: prism_color,
+            polygonOffset: true,
+            polygonOffsetFactor: 1, // positive value pushes polygon further away
+            polygonOffsetUnits: 1
         });
-        this.cone = new THREE.Mesh(geometry, material);
-        this.cone.position.x = x;
-        this.cone.position.y = y;
-        this.cone.rotation.x = Math.PI/2;
+
+        var prism = new THREE.Mesh(this.prismGeometry, material);
+        prism.position.set(point_v1.x, point_v1.y, 0.0);
+        prism.scale.z = point_v1.distanceTo(point_v2);
+        prism.rotateX(Math.PI / 2);
+
+        return prism;
     }
 }
 
