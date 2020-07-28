@@ -1,6 +1,6 @@
 var VoroGUI = function () {
     this.planeMode = false;
-    this.treeMode = false;
+    this.treeMode = true;
     this.shape = 'normalCone';
     this.planeZ = 0.5;
 }
@@ -35,6 +35,8 @@ class Vornoi2D {
 
         this.pointRadius = 0.003;
         this.pointSegments = 8;
+
+        this.snap_distance = 0.1;
 
         this.factor = 1.0;
         this.screenWidth = window.innerWidth * this.factor;
@@ -127,7 +129,7 @@ class Vornoi2D {
 
     keyboardEventCallback(event) {
         if(event.keyCode == 27){ // Esc
-            this.escCallBack();
+            this.stopCurveCallBack();
         }
 
         if(event.keyCode == 80){ // P
@@ -153,7 +155,7 @@ class Vornoi2D {
         }
     }
 
-    escCallBack() {
+    stopCurveCallBack() {
         if(this.curveProgressFlag == true) {
             this.deleteLine(this.voroSegments - 1);
             this.curveProgressFlag = false;
@@ -206,8 +208,10 @@ class Vornoi2D {
             this.curveProgressFlag = true;
 
             if(this.treeMode) {
-                this.treeMode = false;
-                Vgui.treeMode = false;
+                // this.treeMode = false;
+                // Vgui.treeMode = false;
+
+                // TODO: Replace following code with `getClosestExistingVertex`
 
                 if(this.lineVertices.size > 0) {
                     var minDistance = Infinity;
@@ -238,6 +242,7 @@ class Vornoi2D {
                 
             } else {
                 // this.currentCurveColor = new THREE.Color(this.getHSLColor(70));
+                console.log("First point!");
                 this.currentCurveColor = this.getHSLColor(70);
                 this.addLine(this.lineFirstPoint, this.lineFirstPoint + 0.25, this.lineLevels, this.currentCurveColor);
 
@@ -351,10 +356,17 @@ class Vornoi2D {
     }
 
     modifyLine(lineIndex, point1, point2, levels) {
-        var line = this.makeLine(point1, point2, levels, [point1, point2]);
+        // var line = this.makeLine(point1, point2, levels, [point1, point2]);
 
         // this.lineSegments[lineIndex].v1 = point1;
         // this.lineSegments[lineIndex].v2 = point2;
+        var snap_information = this.getClosestExistingVertex(point2);
+
+        if(snap_information.snap_possible) {
+            if(point2.distanceTo(snap_information.snap_point) <= this.snap_distance) {
+                point2 = snap_information.snap_point;
+            }
+        }
         
         var points = [];
         points.push( new THREE.Vector3( point1.x, point1.y, 5 ) );
@@ -481,6 +493,38 @@ class Vornoi2D {
 
         return prism;
     }
+
+    getClosestExistingVertex(point) {
+        if(this.lineVertices.size <= 0) {
+            return {
+                snap_possible: false,
+                snap_point : null,
+                snap_color : null
+            };
+        }
+        var minDistance = Infinity;
+        var firstPoint;
+        var color;
+
+        for(let [key, value] of this.lineVertices) {
+            console.log(key);
+            console.log("Distance: " + point.distanceTo(key));
+            if(point.distanceTo(key) < minDistance) {
+                
+                minDistance = point.distanceTo(key);
+
+                firstPoint = key;
+                color = value;
+                console.log(key);
+            }
+        }
+        return {
+            snap_possible: true,
+            snap_point : firstPoint,
+            snap_color : color
+        };
+    }
+
 }
 
 V = new Vornoi2D();
@@ -518,10 +562,16 @@ var animate = function () {
 document.addEventListener("click", mouseClick);
 document.addEventListener("mousemove", mouseMove);
 document.body.onkeyup = function(e){
-    V.keyboardEventCallback(e)
-;}
+    V.keyboardEventCallback(e);
+}
 
 animate();
+
+window.oncontextmenu = function () // Right mouse button callback
+{
+    V.stopCurveCallBack();
+    return false;
+}
 
 function mouseClick(event) {
     if(!V.planeMode) {
