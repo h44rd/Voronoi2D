@@ -1,8 +1,26 @@
+// import { Scene, OrthographicCamera, WebGLRenderer, Object3D, PlaneGeometry, MeshBasicMaterial, Mesh, Vector2, Color, ConeGeometry, Vector3, LineBasicMaterial, BufferGeometry, Line, Shape, ExtrudeGeometry, OBJLoader } from '../node_modules/three/build/three.module';
+
+var LIBRARY_URL = 'https://unpkg.com/three@0.119.1/'
+
+import * as THREE from 'https://unpkg.com/three@0.119.1/build/three.module.js';
+import { OBJLoader } from 'https://unpkg.com/three@0.119.1/examples/jsm/loaders/OBJLoader.js';
+
+
+import { EffectComposer } from 'https://unpkg.com/three@0.119.1/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'https://unpkg.com/three@0.119.1/examples/jsm/postprocessing/RenderPass.js';
+import { ShaderPass } from 'https://unpkg.com/three@0.119.1/examples/jsm/postprocessing/ShaderPass.js';
+
+import { LuminosityShader } from 'https://unpkg.com/three@0.119.1/examples/jsm/shaders/LuminosityShader.js';
+import { SobelOperatorShader } from 'https://unpkg.com/three@0.119.1/examples/jsm/shaders/SobelOperatorShader.js';
+
+// import * as dat from 'https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5/dat.gui.min.js';
+
 var VoroGUI = function () {
     this.planeMode = false;
     this.treeMode = true;
     this.shape = 'normalCone';
     this.planeZ = 0.5;
+    this.BoundariesEnabled = true;
 }
 
 var Vgui = new VoroGUI();
@@ -11,6 +29,7 @@ var controller = gui.add(Vgui, 'planeMode', false);
 var controller2 = gui.add(Vgui, 'treeMode', false);
 var controller3 = gui.add(Vgui, 'shape', ['normalCone', 'starCone', 'plusCone', 'sixStarCone']);
 var controller4 = gui.add(Vgui, 'planeZ', -1.0, 1.0);
+var controller5 = gui.add(Vgui, 'BoundariesEnabled', true);
 controller.listen();
 controller2.listen();
 
@@ -44,6 +63,20 @@ class Vornoi2D {
 
         this.renderer = new THREE.WebGLRenderer();
         this.renderer.setSize(this.screenWidth, this.screenHeight);
+
+        this.composer = new EffectComposer(this.renderer);
+        var renderPass = new RenderPass(this.scene, this.camera);
+        this.composer.addPass(renderPass);
+
+        var effectGrayScale = new ShaderPass(LuminosityShader);
+        this.composer.addPass(effectGrayScale);
+
+        var effectSobel = new ShaderPass(SobelOperatorShader);
+        effectSobel.uniforms['resolution'].value.x = window.innerWidth * window.devicePixelRatio;
+        effectSobel.uniforms['resolution'].value.y = window.innerHeight * window.devicePixelRatio;
+        this.composer.addPass(effectSobel);
+        this.boundariesEnabled = true;
+
 
         this.voroSegments = 0;
         this.cones = [];
@@ -179,6 +212,7 @@ class Vornoi2D {
 
     deleteLine(lineIndex) {
         this.scene.remove(this.lineSegments[lineIndex]);
+        this.lineSegments.splice(lineIndex);
         this.scene.remove(this.prisms[lineIndex]);
         for(var i = 0; i < this.cones[lineIndex].length; i++) {
             this.scene.remove(this.cones[lineIndex][i]);
@@ -274,7 +308,11 @@ class Vornoi2D {
         if(this.lineProgressFlag == true) {
             this.modifyLine(this.voroSegments - 1, this.lineFirstPoint, this.lineSecondPoint, this.lineLevels);
         }
-        this.renderer.render(this.scene, this.camera);
+        if(this.boundariesEnabled == true) {
+            this.composer.render();
+        } else {
+            this.renderer.render(this.scene, this.camera);
+        }
     }
 
     getHSLColor(S) {
@@ -416,7 +454,10 @@ class Vornoi2D {
         var geometry = new THREE.BufferGeometry().setFromPoints( points );
 
         var lineSegment = new THREE.Line( geometry, material );
-        this.scene.add(lineSegment);
+
+        if(this.boundariesEnabled == false) {
+            this.scene.add(lineSegment);
+        }
         
         this.lineSegments[this.voroSegments] = lineSegment;
 
@@ -466,6 +507,18 @@ class Vornoi2D {
         this.makeLine(point1, midpoint, levels - 1, points);
         this.makeLine(midpoint, point2, levels - 1, points);
         return points;
+    }
+
+    removeLineSegments() {
+        for(var i = 0; i < this.lineSegments.length; i++) {
+            this.scene.remove(this.lineSegments[i]);
+        }
+    }
+
+    displayLineSegments() {
+        for(var i = 0; i < this.lineSegments.length; i++) {
+            this.scene.add(this.lineSegments[i]);
+        }
     }
 
     createPrismGeometry() {
@@ -527,24 +580,24 @@ class Vornoi2D {
 
 }
 
-V = new Vornoi2D();
+var V = new Vornoi2D();
 
-// var firstSeed = V.makeSeed(new THREE.Vector2(0,0) , V.getRandomColor());
+// var firstSeed = V.makeSeed(new THREE.THREE.Vector2(0,0) , V.getRandomColor());
 // V.scene.add(firstSeed.cone);
 
-// a = new THREE.Vector2(-0.25, 0.5)
-// b = new THREE.Vector2(0.5, 0.5);
+// a = new THREE.THREE.Vector2(-0.25, 0.5)
+// b = new THREE.THREE.Vector2(0.5, 0.5);
 
 // V.addLine(a, b, 5);
 
-// a = new THREE.Vector2(0, 0.4)
-// b = new THREE.Vector2(0, -0.4);
+// a = new THREE.THREE.Vector2(0, 0.4)
+// b = new THREE.THREE.Vector2(0, -0.4);
 
 // V.addLine(a, b, 5);
 
 
-// a = new THREE.Vector2(-0.5, -0.5)
-// b = new THREE.Vector2(0.25, -0.5);
+// a = new THREE.THREE.Vector2(-0.5, -0.5)
+// b = new THREE.THREE.Vector2(0.25, -0.5);
 
 // V.addLine(a, b, 5);
 
@@ -555,7 +608,7 @@ var animate = function () {
     V.render();
     // V.camera.position.y = 5 * Math.sin(angle);
     // V.camera.position.z = 5 * Math.cos(angle);
-    // V.camera.lookAt(new THREE.Vector3(0,0,0));
+    // V.camera.lookAt(new THREE.THREE.Vector3(0,0,0));
     // angle += 0.01;
 };
 
@@ -600,6 +653,16 @@ controller4.onChange(function(value) {
     V.plane.position.z = value;
 });
 
+// Boundaries controller
+controller5.onChange(function(value) {
+    V.boundariesEnabled = value;
+    if(value == true) {
+        V.removeLineSegments();
+    } else {
+        V.displayLineSegments();
+    }
+});
+
 
 
 function loadCustomShape(objectType) {
@@ -615,7 +678,7 @@ function loadCustomShape(objectType) {
 
         if(V.customCones[objectType].isLoaded != true) {
             
-            var loader = new THREE.OBJLoader();
+            var loader = new OBJLoader();
 
             var shapeFile;
 
@@ -637,7 +700,7 @@ function loadCustomShape(objectType) {
                     
                     // V.coneShape = objectType;
                     // V.scene.remove(firstSeed.cone);
-                    // firstSeed = V.makeSeed(new THREE.Vector2(0,0) , V.getRandomColor());
+                    // firstSeed = V.makeSeed(new THREE.THREE.Vector2(0,0) , V.getRandomColor());
                     // V.scene.add(firstSeed.cone);
                 },
                 function (xhr){
